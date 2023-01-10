@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webapp.ccedu.mapper.CommonMapper">
+    <resultMap id="clobMap" type="emap">
+        <result property="CONTENT" column="CONTENT" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+	<resultMap type="hashmap" id="cusorMap"></resultMap>
+    
+    <select id="selectMtCodeSub" parameterType="dmap" resultType="emap">
+        SELECT MT_SUB_CODE
+            , A.MT_SUB_NAME
+            , A.SUMMARY
+            , A.REF1
+            , A.REF2
+            , A.REF3
+            <if test="mtCode2 != null and mtCode2 != '' ">
+            	, (SELECT MT_SUB_CODE FROM LMS_CD_MT_SUB B WHERE B.ABC_CD = A.ABC_CD AND B.MT_CODE = #{mtCode2} AND B.MT_SUB_NAME = A.MT_SUB_NAME) AS MT_SUB_CODE2
+            </if>
+        FROM LMS_CD_MT_SUB A
+        WHERE MT_CODE = #{mtCode}
+        AND USEYN = 'Y'
+        <if test="abcCd != null and abcCd != ''">
+        	AND ABC_CD = #{abcCd}
+        </if>
+        <if test="schMtSubName != null and schMtSubName != ''">
+        	AND MT_SUB_NAME LIKE '%' || #{schMtSubName} || '%'
+        </if>
+        <if test="ref1 != null and ref1 != ''">
+        	AND REF1 = #{ref1}
+        </if>
+        <if test="ref2 != null and ref2 != ''">
+        	AND REF2 = #{ref2}
+        </if>
+        <if test="ref3 != null and ref3 != ''">
+        	AND REF3 = #{ref3}
+        </if>
+        ORDER BY ORDR, MT_SUB_CODE
+    </select>
+</mapper>

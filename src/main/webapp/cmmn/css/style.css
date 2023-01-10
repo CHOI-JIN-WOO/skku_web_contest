@@ -1,0 +1,12 @@
+@charset "utf-8";
+
+/*
+ ★ Coding By DumiCode
+ ★ homepage: http://www.dumicode.com
+*/
+
+/* default set */
+@import url("base.css");
+
+/* common*/
+@import url("common.css");

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webapp.ccedu.mapper.BookMapper">
+    <select id="selectTotalBookList" resultType="emap">    
+	    SELECT
+		    A.BOOKNO
+            , A.BOOKCATENO
+	        , A.TITLE
+	        , A.PRICE
+	        , A.PRICE_REAL
+	        , A.B_WRITER
+	        , A.B_COMP
+	        , B.SAVFILE
+		FROM
+		    LMS_ED_BOOK A
+		    , LMS_ED_BOOK_FILE B
+		WHERE
+		    A.BOOKNO = B.BOOKNO
+		    AND A.USEYN = 'Y'
+		ORDER BY
+		    A.BOOKNO DESC
+	</select>        
+    
+    <select id="selectBookInfo" resultType="emap" parameterType="dmap">
+	    SELECT 
+		  A.BOOKNO
+		  , A.TITLE
+		  , DBMS_LOB.SUBSTR(A.CONTENT, 2000, 1) AS CONTENT
+		   <![CDATA[
+               , REGEXP_REPLACE(CONTENT, '<[^>]*>', '') AS CONTENT_REPLACE
+           ]]>
+		  , A.PRICE
+		  , A.PRICE_REAL
+		  , A.B_WRITER
+		  , A.B_COMP
+		  , TO_CHAR(A.B_PUBD,'YYYY-MM-DD') AS B_PUBD
+		  , A.B_PAGE
+		  , A.B_ISBN
+		  , A.STOCKYN
+		  , B.SAVFILE
+		FROM 
+	  		LMS_ED_BOOK A,
+	  		LMS_ED_BOOK_FILE B
+		WHERE
+	 		A.BOOKNO = #{bookNo}
+	  		AND A.BOOKNO = B.BOOKNO
+	  		AND A.USEYN = 'Y'
+    </select>  
+        
+    <select id="getBookPrice" resultType="Integer" parameterType="String">
+    	SELECT
+    		PRICE_REAL
+    	FROM
+    		LMS_ED_BOOK
+    	WHERE
+    		BOOKNO = #{pNo}
+    </select>    
+</mapper>

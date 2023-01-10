@@ -1,0 +1,11 @@
+package com.webapp.ccedu.mapper;
+
+import java.util.List;
+import com.sangs.support.DataMap;
+import com.sangs.support.EduMap;
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+
+@Mapper("CommonMapper")
+public interface CommonMapper {
+    List<EduMap> selectMtCodeSub(DataMap data) throws Exception;
+}

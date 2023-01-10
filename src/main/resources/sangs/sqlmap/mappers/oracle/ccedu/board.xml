@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webapp.ccedu.mapper.BoardMapper">
+    <resultMap id="clobMap" type="emap">
+        <result property="CONTENT" column="CONTENT" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="AN_CONTENT" column="AN_CONTENT" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="CONTENT_REPLACE" column="CONTENT_REPLACE" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+    <resultMap id="popClobMap" type="emap">
+        <result property="POP_CONTENT" column="POP_CONTENT" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+    <select id="getBoardList" resultMap="clobMap" parameterType="dmap">
+	SELECT A.*
+	         , CASE WHEN A.MT_GRADE_CODE = 'AA9999' 
+	         		THEN 'admin'
+	         		WHEN LENGTH(A.USER_ID) > 4
+			        THEN SUBSTR(A.USER_ID,1,4) || lpad('*',length(A.USER_ID)-4,'*')
+			        ELSE SUBSTR(A.USER_ID,1,TRUNC(LENGTH(A.USER_ID)/2)) || lpad('*',LENGTH(A.USER_ID)-TRUNC(LENGTH(A.USER_ID)/2),'*') 
+			         END AS USERID
+	        FROM (
+	                  SELECT ROW_NUMBER() OVER(ORDER BY NVL(TOPYN,'N') DESC, A.WDATE DESC )RNUM
+	                     , A.BBSNO
+	                     , A.USERNO
+	                     , B.MT_GRADE_CODE
+	                     , CASE WHEN B.MT_GRADE_CODE = 'AA9999' THEN 'admin'
+                                ELSE A.WRITER
+                           END WRITER     
+	                     , TO_CHAR(A.WDATE , 'YYYY-MM-DD') AS WDATE
+	                     , TO_CHAR(A.DSCSN_EDATE , 'YYYY.MM.DD') AS EVENT_EDATE
+	                     , TO_CHAR(SYSDATE , 'YYYY.MM.DD') AS TODAY_DATE
+	                     , A.WDATE AS WDATE_ORD
+	                     , A.TITLE
+	                     , A.CONTENT
+	                     <![CDATA[
+	                     , REGEXP_REPLACE(A.CONTENT, '<[^>]*>', '') AS CONTENT_REPLACE
+	                     ]]>
+	                     , RCNT
+	                     , GRPNO
+	                     , REFLEVEL
+	                     , REFSTEP
+	                     , BCATENO
+	                     , ANYN
+	                     , PWD
+	                     , ETC_INFO01
+	                     , TOPYN
+	                     , OPEN_AT
+	                     , CONNECT_IP
+	                     , UPDT_ID
+	                     , A.UPDT_DATE
+	                     , CATENO
+	                     , CASE WHEN (SYSDATE - A.WDATE <![CDATA[ <= ]]> 1 AND SYSDATE - A.WDATE <![CDATA[ > ]]> 0) THEN 'new_btn' ELSE 'null_btn'  END AS NEWBTN
+	                     , ROUND(SYSDATE - A.WDATE) AS DATE_DIFF
+	                     , COUNT(1) OVER() TOTALCNT
+	                     , MT_CATE_CODE
+	                     , (SELECT COUNT(*) FROM LMS_ED_BBS_CMT B WHERE B.BBSNO = A.BBSNO) AS CMTCOUNT
+	                     , SECUYN
+	                     , CASE WHEN COUNT(1) OVER() > #{endNo} 
+	                               THEN 'Y'
+	                               ELSE 'N'
+	                                END ROW_DIV
+	                     , B.UNITY_ID AS USER_ID
+	                FROM LMS_ED_BBS A, LMS_CT_UNITY_MBER B
+	                WHERE OPEN_AT = 'Y'
+		                AND A.USERNO = B.UNITY_MBERNO
+	                    AND BCATENO = #{bcateno}
+	                <if test="searchWord != null and searchWord != '' ">
+	                    <if test="searchType == 'ALL' " >
+	                       AND ( CONTENT LIKE '%' || #{searchWord} || '%' OR TITLE LIKE '%' || #{searchWord} || '%' )
+	                       AND A.SECUYN !='Y'
+	                    </if>
+	                    <if test="searchType == 'TITLE'" >
+						   AND TITLE LIKE '%' || #{searchWord} || '%'
+						</if>
+						<if test="searchType == 'CONT'" >
+						   AND CONTENT LIKE '%' || #{searchWord} || '%'
+						   AND A.SECUYN !='Y'
+						   
+						</if>
+						<if test="searchType == 'USERID'" >
+							AND UNITY_ID LIKE '%' || #{searchWord} || '%'
+						</if>
+						<if test="searchType == 'CMTUSERID' " >
+							AND EXISTS ( SELECT *
+	                                       FROM LMS_CT_UNITY_MBER MB
+	                                          , LMS_ED_BBS_CMT CMT
+	                                     WHERE 1 = 1
+	                                       AND A.BBSNO = CMT.BBSNO
+	                                       AND MB.UNITY_MBERNO = CMT.USERNO
+	                                       AND MB.UNITY_ID = #{searchWord}
+	                                   )
+						</if>
+					</if>
+					<if test="mtCateCode != null and mtCateCode != ''">
+					    AND MT_CATE_CODE = #{mtCateCode}    
+					</if>
+					<if test="courseno != null and courseno != ''">
+					    AND COURSENO = #{courseno}    
+					</if>
+					<if test="searchWd != null and searchWd != ''">
+					AND TITLE LIKE #{searchWd} || '%' 
+					</if>
+					ORDER BY NVL(TOPYN,'N') DESC, WDATE DESC
+			) A
+			WHERE 1=1
+			AND RNUM BETWEEN #{startNo} AND #{endNo}    
+			ORDER BY NVL(TOPYN,'N') DESC, WDATE_ORD DESC
+    </select>
+	
+    <select id="getBoardListCnt" resultType="int" parameterType="int">
+        SELECT COUNT(*)
+        FROM LMS_ED_BBS A, LMS_CT_UNITY_MBER B
+		WHERE OPEN_AT = 'Y'
+			AND A.USERNO = B.UNITY_MBERNO
+            AND BCATENO = #{bcateno}
+                <if test="searchWord != null and searchWord != '' ">
+	                    <if test="searchType == 'ALL' " >
+	                       AND ( CONTENT LIKE '%' || #{searchWord} || '%' OR TITLE LIKE '%' || #{searchWord} || '%' )
+	                       AND A.SECUYN !='Y'
+	                    </if>
+	                    <if test="searchType == 'TITLE' " >
+						   AND TITLE LIKE '%' || #{searchWord} || '%'
+						</if>
+						<if test="searchType == 'CONT' " >
+						   AND CONTENT LIKE '%' || #{searchWord} || '%'
+						   AND A.SECUYN !='Y'
+						</if>
+						<if test="searchType == 'USERID' " >
+							AND B.UNITY_ID LIKE '%' || #{searchWord} || '%'
+						</if>
+						<if test="searchType == 'CMTUSERID' " >
+							AND EXISTS ( SELECT *
+	                                       FROM LMS_CT_UNITY_MBER MB
+	                                          , LMS_ED_BBS_CMT CMT
+	                                     WHERE 1 = 1
+	                                       AND A.BBSNO = CMT.BBSNO
+	                                       AND MB.UNITY_MBERNO = CMT.USERNO
+	                                       AND MB.UNITY_ID = #{searchWord}
+	                                   )
+						</if>
+					</if>
+					<if test="mtCateCode != null and mtCateCode != ''">
+					    AND MT_CATE_CODE = #{mtCateCode}    
+					</if>
+					<if test="searchWd != null and searchWd != ''">
+					AND TITLE LIKE #{searchWd} || '%' 
+					</if>
+    </select>
+	
+    <select id="getLateBoardList" resultMap="clobMap" parameterType="dmap">
+	  SELECT A.*
+	    FROM ( SELECT BBSNO
+		            , USERNO
+		            , WDATE
+		            , TO_CHAR(WDATE, 'YYYY.MM.DD') AS WDATE_FM
+		            , TITLE, RCNT
+		    	    , CASE WHEN LENGTH(TITLE) > 50
+	                          THEN SUBSTR(TITLE,1,50) || ' ···'
+	                           ELSE TITLE
+	                            END AS SUBSTR_TITLE
+		         	, ROUND(SYSDATE - WDATE) AS DATE_DIFF
+		         	, REPLACE(CONTENT, '？','') AS CONTENT
+					 <![CDATA[
+	                     , REGEXP_REPLACE(CONTENT, '<[^>]*>', '') AS CONTENT_REPLACE
+	                 ]]>
+		         	, NVL(TOPYN, 'N') TOPYN 
+		         	, TRIM(REGEXP_REPLACE(DBMS_LOB.SUBSTR(CONTENT,1000,1),'&#60;[^&#62;]*&#62;','')) AS NO_TAG_CONTENT
+		      FROM LMS_ED_BBS
+		     WHERE 1 = 1
+	         <if test="bcateno != null and bcateno != ''">
+	             AND BCATENO = #{bcateno}
+	         </if>
+	             AND OPEN_AT = 'Y'
+	         ) A
+     ORDER BY A.TOPYN DESC, A.WDATE DESC 
+    </select>
+
+    <select id="getBoardView" resultMap="clobMap" parameterType="dmap">
+        	SELECT A.*
+			FROM 
+			(
+				SELECT BBSNO
+					 , USERNO
+					 , WRITER
+			       	 , TO_CHAR(WDATE,'yyyy.mm.dd') AS WDATE
+					 , TITLE
+					 , REPLACE(CONTENT, '？','') AS CONTENT
+					 , RCNT
+					 , GRPNO
+					 , REFLEVEL
+					 , REFSTEP
+					 , BCATENO
+					 , ANYN
+					 , PWD
+					 , ETC_INFO01
+					 , TOPYN
+					 , ORDTM_AT
+					 , OPEN_AT
+					 , DSCSN_SDATE
+					 , DSCSN_EDATE
+					 , CONNECT_IP
+					 , UPDT_ID
+					 , UPDT_DATE
+					 , COURSENO
+					 , CATENO
+					 , SECUYN 
+			         , (SELECT NVL(UNITY_ID,'-') FROM LMS_CT_UNITY_MBER WHERE UNITY_MBERNO = A.USERNO) AS USER_ID
+		             , LEAD(BBSNO,1) OVER( ORDER BY TOPYN DESC, WDATE DESC) AS BBSNO_PREV
+					 , LAG(BBSNO,1) OVER(ORDER BY TOPYN DESC, WDATE DESC) AS BBSNO_NEXT
+		       FROM LMS_ED_BBS A
+		     WHERE OPEN_AT = 'Y'
+                 AND BCATENO = #{bcateno}
+                <if test="searchWord != null and searchWord != '' ">
+                    <if test="searchType == 'ALL' " >
+                       AND ( CONTENT LIKE '%' || #{searchWord} || '%' OR TITLE LIKE '%' || #{searchWord} || '%' )
+                    </if>
+                    <if test="searchType == 'TITLE' " >
+                       AND TITLE LIKE '%' || #{searchWord} || '%'
+                    </if>
+                    <if test="searchType == 'CONT' " >
+                       AND CONTENT LIKE '%' || #{searchWord} || '%'
+                    </if>
+                </if>
+                <if test="mtCateCode != null and mtCateCode != ''">
+                    AND MT_CATE_CODE = #{mtCateCode}    
+                </if>
+                <if test="searchWd != null and searchWd != ''">
+                AND TITLE LIKE #{searchWd} || '%' 
+                </if>
+		     )A
+		     WHERE BBSNO = #{bbsNo}
+    </select>
+
+    <select id="getLmsEdBbsCmtInfo" parameterType="dmap" resultType="emap">    
+		 SELECT 
+              A.BBSNO
+            , A.USERNO
+            , A.WRITER AS WRITER
+            , TO_CHAR(A.WDATE, 'YYYY.MM.DD') AS WDATE
+            , A.TITLE
+            , A.CONTENT
+            , B.CMTNO
+            , B.BBSNO
+            , B.WRITER AS CMTWRITER
+            , TO_CHAR(B.WDATE, 'YYYY.MM.DD') AS CMTWDATE
+            , B.CONTENT AS REPLY
+            , B.USEYN
+        FROM LMS_ED_BBS A
+        INNER JOIN LMS_ED_BBS_CMT B
+        ON A.BBSNO = B.BBSNO
+        WHERE A.BBSNO = #{bbsNo}    
+    </select>
+    
+    <update id="updateBoardViewCnt" parameterType="dmap">
+        UPDATE 
+        	LMS_ED_BBS
+       	SET 
+           	RCNT = RCNT+1
+     	WHERE 
+     		BBSNO = #{bbsNo}
+    </update>
+
+    <update id="updateBoardInfo" parameterType="dmap">
+        UPDATE 
+        	LMS_ED_BBS
+       	SET 
+       		TITLE = #{title}
+			, CONTENT = #{content}
+			, SECUYN = #{secuYn}
+			<if test="bcateno != null and bcateno != ''">
+			, BCATENO =  #{bcateno}
+			</if>
+			<if test="courseno != null and courseno != ''">
+			, COURSENO =  #{courseno}
+			</if>
+         WHERE 
+         	BBSNO = #{bbsNo}
+    </update>
+    
+    <update id="changeBoardReplyStatus" parameterType="dmap">
+	    UPDATE 
+	    	LMS_ED_BBS
+	    SET
+	    	ANYN = #{status}
+	    WHERE
+	    	BBSNO = #{bbsNo}
+    </update>
+    
+    <insert id="insertBoardReply" parameterType="dmap">
+	    INSERT INTO LMS_ED_BBS_CMT(
+		    CMTNO
+		    , BBSNO
+		    , WRITER
+		    , WDATE
+		    , CONTENT
+		    , USERNO
+		    , USEYN
+	    ) 
+	    VALUES 
+	   	(
+		    (SELECT NVL(MAX(CMTNO) , 0)+1 FROM LMS_ED_BBS_CMT)
+		    , #{bbsNo}
+		    , #{SES_USERNAME}
+		    , SYSDATE
+		    , #{content}
+		    , #{SES_USERNO}
+		    , 'Y'
+	    )
+    </insert>
+    
+    <insert id="insertBoardInfo" parameterType="dmap">
+       INSERT  INTO LMS_ED_BBS(
+	     BBSNO,
+	     WRITER,
+	     WDATE,
+	     TITLE,
+	     CONTENT,
+	     RCNT,
+	     GRPNO,
+	     REFLEVEL,
+	     REFSTEP,
+	     USERNO,
+	     BCATENO,
+	     SECUYN,
+	     ANYN, 
+	     OPEN_AT
+	   )
+       VALUES
+       (
+	        #{bbsNo},
+	        #{SES_USERNAME},
+	        SYSDATE,
+	        #{title},
+	        TO_CLOB(#{content}),
+	        0,
+	        #{bbsNo},
+	        0,
+	        0,
+	        #{SES_USERNO},
+	        #{bcateno},
+	        'Y',
+	        'N',
+	        'Y'
+        )
+    </insert>
+    
+    <delete id="deleteBoardInfo" parameterType="dmap">
+        DELETE FROM 
+        	LMS_ED_BBS
+         WHERE 
+         	BBSNO = #{bbsNo}
+    </delete>
+    
+    <delete id="deleteBoardReply" parameterType="dmap">    	
+    	DELETE FROM 
+    		LMS_ED_BBS_CMT
+    	WHERE 
+    		BBSNO = #{bbsNo}
+    	<if test="cmtNo != null and cmtNo != '' ">
+    		AND CMTNO = #{cmtNo}
+    	</if>    	
+    </delete>
+        
+    <select id="getMaxBoardNo" resultType="int" >
+        SELECT NVL(MAX(BBSNO),0)+1
+          FROM LMS_ED_BBS
+    </select>
+    
+    <select id="getListReply" parameterType="dmap" resultType="emap">    
+    	SELECT 
+    		  CMTNO
+    		, BBSNO
+    		, WRITER
+    		, WDATE
+    		, CONTENT
+    		, USERNO
+    		, UNITY_ID AS USERID2
+    		, CASE WHEN LENGTH(UNITY_ID) > 4
+                      THEN SUBSTR(UNITY_ID,1,4) || lpad('*',length(UNITY_ID)-4,'*')
+                      ELSE SUBSTR(UNITY_ID,1,TRUNC(LENGTH(UNITY_ID)/2)) || lpad('*',LENGTH(UNITY_ID)-TRUNC(LENGTH(UNITY_ID)/2),'*') 
+                       END AS USERID
+    	FROM LMS_ED_BBS_CMT A
+    	      , LMS_CT_UNITY_MBER B
+    	WHERE 1 = 1
+    	    AND A.USERNO = B.UNITY_MBERNO (+)
+    	    AND BBSNO = #{bbsNo}
+    	ORDER BY CMTNO DESC    
+    </select>
+    
+    
+    
+    
+    
+    
+</mapper>

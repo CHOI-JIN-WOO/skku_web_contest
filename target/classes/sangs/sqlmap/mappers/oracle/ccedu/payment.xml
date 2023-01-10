@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webapp.ccedu.mapper.PaymentMapper">
+    <select id="selectUserInfo" resultType="emap" parameterType="Integer">
+		SELECT 
+			MBERNM
+		  , SUBSTR(MOBLPHON,1,INSTR(MOBLPHON,'-',1,1)-1) AS MOBLPHON1
+		  , SUBSTR(MOBLPHON,INSTR(MOBLPHON,'-',1,1)+1,INSTR(MOBLPHON,'-',1,2)-INSTR(MOBLPHON,'-',1,1)-1) AS MOBLPHON2
+		  , SUBSTR(MOBLPHON,INSTR(MOBLPHON,'-',1,2)+1) AS MOBLPHON3
+		  , LNM_ZIP
+		  , LNM_ADRES1
+		  , LNM_ADRES2
+		FROM
+		  LMS_CT_UNITY_MBER
+		WHERE 
+		  UNITY_MBERNO = #{userno}
+    </select>
+    
+    <select id="selectPaymentLastOrder" resultType="int">
+    	SELECT NVL(MAX(CC_PAY_NO), 0) + 1 FROM CC_PAYMENT
+    </select>  
+    
+    <select id="selectPaymentList" resultType="emap" parameterType="dmap">    	
+		SELECT A.* ,
+		  CASE 
+		    WHEN MT_TARGET_TYPE = 'TT0002'
+		      THEN (SELECT TITLE FROM LMS_ED_BOOK WHERE BOOKNO = A.PRODUCT_NO)
+		    END AS TITLE
+		FROM (
+			SELECT 
+				TO_CHAR(REGIST_DT, 'YYYY-MM-DD') REGIST_DT
+				, MT_TARGET_TYPE
+				, PRICE
+				, MT_PAY_TYPE
+				, MT_PAY_STAT  
+      			, PRODUCT_NO
+                , SEND_CODE
+      			, CC_TARGET_NO
+                , AMOUNT
+    		FROM CC_PAYMENT 
+    		WHERE UNITY_MBERNO = #{SES_USERNO}  			
+    			AND MT_TARGET_TYPE = #{code} 
+    		ORDER BY CC_PAY_NO DESC
+    		) A
+    </select>   
+    
+    <select id="selectPaymentHist" resultType="emap" parameterType="String"> 
+    	SELECT
+    		*
+    	FROM
+    		CC_PAYMENT
+    	WHERE
+    		CC_TARGET_NO = #{orderNo}    
+    </select>  
+    
+    <insert id="insertPayment" parameterType="dmap">
+		INSERT INTO CC_PAYMENT
+			(
+				  CC_PAY_NO
+				, UNITY_MBERNO
+				, CC_TARGET_NO
+				, PRICE
+				, REGIST_DT
+        		, MT_TARGET_TYPE
+        		, MT_PAY_TYPE
+        		, MT_PAY_STAT
+        		, PRODUCT_NO       		
+				<if test="pReceiptNm != null and pReceiptNm != ''">
+				, RECP_NM
+				</if>   		
+				<if test="pMobile != null and pMobile != ''">
+				, RECP_PH
+				</if>   		
+				<if test="pZip != null and pZip != ''">
+				, RECP_ZP
+				</if>   		
+				<if test="pAddr1 != null and pAddr1 != ''">
+				, RECP_AD1
+				</if>   		
+				<if test="pAddr2 != null and pAddr2 != ''">
+				, RECP_AD2
+				</if>   		
+				<if test="pReq != null and pReq != ''">
+				, RECP_TX
+				</if>   		
+				<if test="pAmount != null and pAmount != ''">
+				, AMOUNT
+				</if>
+			)
+		VALUES
+			(
+				  (SELECT NVL(MAX(CC_PAY_NO), 0) + 1 FROM CC_PAYMENT)
+				, #{allat_buyer_no}
+				, #{allat_order_no}
+				, #{price}
+				, SYSDATE
+      			, #{pCd}
+      			, #{allat_pay_type}
+      			, #{allat_pay_stat}
+      			, #{pNo}     			
+				<if test="pReceiptNm != null and pReceiptNm != ''">
+      			, #{pReceiptNm}
+				</if>   		
+				<if test="pMobile != null and pMobile != ''">
+				, #{pMobile}
+				</if>   		
+				<if test="pZip != null and pZip != ''">
+				, #{pZip}
+				</if>   		
+				<if test="pAddr1 != null and pAddr1 != ''">
+				, #{pAddr1}
+				</if>   		
+				<if test="pAddr2 != null and pAddr2 != ''">
+				, #{pAddr2}
+				</if>   		
+				<if test="pReq != null and pReq != ''">
+				, #{pReq}
+				</if>   		
+				<if test="pAmount != null and pAmount != ''">
+				, #{pAmount}
+				</if>   		
+			)			
+	</insert>
+</mapper>

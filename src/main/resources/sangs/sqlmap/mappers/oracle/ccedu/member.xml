@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.webapp.ccedu.mapper.MemberMapper">
+    <select id="searchMberEmail" resultType="emap" parameterType="dmap">
+        SELECT 
+        	UNITY_ID
+        	, MOBLPHON
+        	, EMAIL
+        	, UNITY_MBERNO
+        FROM 
+        	LMS_CT_UNITY_MBER 
+        WHERE 
+        	EMAIL = #{email}
+        <if test="SES_USERNO != null and SES_USERNO != '' and SES_USERNO > 0">
+        	AND UNITY_MBERNO = #{SES_USERNO}
+        </if>
+        <if test="userName != null and userName != ''"> 
+        	AND MBERNM =  #{userName}
+        </if>
+        	AND SECSN_AT = 'N'
+    </select>
+
+    <select id="searchMberId" resultType="emap" parameterType="dmap">
+        SELECT 
+       		UNITY_ID USERID 
+        FROM 
+        	LMS_CT_UNITY_MBER 
+        WHERE 
+        	UNITY_ID = #{userId}
+    </select>
+
+    <select id="getFindId" resultType="emap" parameterType="dmap">
+	/* getFindId */    
+		SELECT * FROM(
+			SELECT UNITY_ID, ROW_NUMBER() OVER( ORDER BY LOGIN_DATE DESC) AS RNUM
+			FROM LMS_CT_UNITY_MBER
+			WHERE 1 = 1
+			  AND SECSN_AT = 'N' 
+			  AND MBERNM = #{mberNm}
+			  AND BRTHDY = #{brthYear}||#{brthMonth}||#{brthDay}
+			  AND MOBLPHON = #{moblphon1}||'-'||#{moblphon2}||'-'||#{moblphon3})
+		WHERE RNUM = 1
+    </select>
+    
+    <select id="getFindPw" resultType="emap" parameterType="dmap">
+    /* getFindPw */
+		SELECT * FROM(
+			SELECT UNITY_ID, 
+					ROWNUM AS RNUM, 
+					COUNT(*) OVER() AS TOTAL_COUNT,
+					MBERNM,
+					BRTHDY,
+					MOBLPHON
+			FROM LMS_CT_UNITY_MBER
+			WHERE SECSN_AT = 'N'  
+			AND UNITY_ID = #{mberId}
+			AND MBERNM = #{mberNm}
+			AND BRTHDY = #{brthYear}||#{brthMonth}||#{brthDay}
+			AND MOBLPHON = #{moblphon1}||'-'||#{moblphon2}||'-'||#{moblphon3})
+			
+		WHERE RNUM = 1
+    </select>
+    
+    <insert id="insertUnityMber" parameterType="dmap">
+        INSERT INTO LMS_CT_UNITY_MBER
+        (
+        	UNITY_MBERNO
+			, MT_GRADE_CODE
+			, UNITY_ID
+			<if test="userPassword != null and userPassword != ''">
+			, UNITY_PASSWORD
+			</if>
+			, MBERNM
+			, BRTHDY
+			, SEX
+			, EMAIL
+			, MOBLPHON
+			<if test="telno2 != null and telno2 != ''">
+			, TELNO
+			</if>
+			<if test="smsRecptnAt != null and smsRecptnAt != ''">
+			, SMS_RECPTN_AT
+			</if>
+			<if test="emailRecptnAt != null and emailRecptnAt != ''">
+			, EMAIL_RECPTN_AT
+			</if>
+			, SECSN_AT
+			, REG_AT
+			<if test='regAt == "Y"'>
+			, RGSDE
+			</if>
+			, LNM_ZIP
+			, LNM_ADRES1
+			, LNM_ADRES2
+			<if test='regAt == "Y"'>
+			, CONFIRM_GUBUN
+			, KCB_DI
+			</if>
+			<if test="job != null and job != ''">
+			, JOB
+			</if>
+			<if test="userPath != null and userPath != ''">
+			, USER_PATH
+			</if>
+			<if test="userEtc != null and userEtc != ''">
+			, USER_ETC
+			</if>
+			, SNS_LOGIN_TYPE
+		)
+		VALUES (
+			( SELECT NVL(MAX(UNITY_MBERNO)+1,0) FROM LMS_CT_UNITY_MBER )
+			, 'AA1000'
+			, #{userId}			
+			<if test="userPassword != null and userPassword != ''">
+			, #{userPassword}
+			</if>
+			, #{userName}
+			, #{brthdy}
+			, #{sex}
+			, #{email}
+			, #{moblphon1}||'-'||#{moblphon2}||'-'||#{moblphon3}
+			<if test="telno2 != null and telno2 != ''">
+			, #{telno1}||'-'||#{telno2}||'-'||#{telno3}
+			</if>
+			<if test="smsRecptnAt != null and smsRecptnAt != ''">
+			, #{smsRecptnAt}
+			</if>
+			<if test="emailRecptnAt != null and emailRecptnAt != ''">
+			, #{emailRecptnAt}
+			</if>
+			, 'N'
+			, #{regAt}
+			<if test='regAt == "Y"'>
+			, SYSDATE
+			</if>
+			, #{lnmZip}
+			, #{lnmAdres1}
+			, #{lnmAdres2}
+			<if test='regAt == "Y"'>
+			, #{confirmGubun}
+			, #{di}
+			</if>
+			<if test="job != null and job != ''">
+			, #{job}
+			</if>
+			<if test="userPath != null and userPath != ''">
+			, #{userPath}
+			</if>
+			<if test="userEtc != null and userEtc != ''">
+			, #{userEtc}
+			</if>
+			, #{snsType}
+		)
+    </insert>
+    
+    <select id="getSessionId"  resultType="String" parameterType="String">
+		SELECT NVL(SESSION_ID,'empty') FROM LMS_CT_UNITY_MBER WHERE UNITY_ID = #{loginId}
+	</select>
+
+	<select id="getLoginUserInfo"  resultType="emap" parameterType="dmap">
+		SELECT 
+             A.UNITY_MBERNO AS USERNO
+            , A.UNITY_ID AS USERID  
+            , UNITY_PASSWORD AS PWD 
+            , A.MT_GRADE_CODE
+            , A.SECSN_AT AS CANCEL_YN 
+            , A.MBERNM AS USERNAME
+            , NVL(LOGIN_FAIL_CNT, 0) AS LOGIN_FAIL_CNT
+            , REG_AT 
+            , CASE WHEN LENGTH(BRTHDY) > 7 THEN SUBSTR(BRTHDY,3)
+           		ELSE BRTHDY END  BRTHDY_CD
+           	, BRTHDY     
+            , SUBSTR(MOBLPHON,1,INSTR(MOBLPHON,'-',1,1)-1) AS MOBLPHON1
+            , SUBSTR(MOBLPHON,INSTR(MOBLPHON,'-',1,1)+1,INSTR(MOBLPHON,'-',1,2)-INSTR(MOBLPHON,'-',1,1)-1) AS MOBLPHON2
+            , SUBSTR(MOBLPHON,INSTR(MOBLPHON,'-',1,2)+1) AS MOBLPHON3
+            , SUBSTR(TELNO,1,INSTR(TELNO,'-',1,1)-1) AS TELNO1
+            , SUBSTR(TELNO,INSTR(TELNO,'-',1,1)+1,INSTR(TELNO,'-',1,2)-INSTR(TELNO,'-',1,1)-1) AS TELNO2
+            , SUBSTR(TELNO,INSTR(TELNO,'-',1,2)+1) AS TELNO3     
+            , SUBSTR(EMAIL,1,INSTR(EMAIL,'@',1,1)-1) AS EMAIL1
+            , SUBSTR(EMAIL,INSTR(EMAIL,'@',1,1)+1) AS EMAIL2  
+            , LNM_ZIP
+            , LNM_ADRES1
+            , LNM_ADRES2   
+            , JOB
+            , USER_PATH
+            , SEX
+            , EMAIL_RECPTN_AT
+            , SMS_RECPTN_AT
+            , USER_ETC
+            , CASE WHEN  SYSDATE <![CDATA[>]]> PW_UPD_DT + 90  THEN 'Y'
+                ELSE 'N' END AS CHANGE_PWD
+			, CASE WHEN  (SELECT COUNT(*) FROM LMS_CT_UNITY_MBER WHERE KCB_DI = #{di})<![CDATA[ > ]]> 0 THEN 'Y'
+                ELSE 'N' END AS JOIN_DUP_CHK  /*중복 가입 여부 체크*/ 
+        FROM LMS_CT_UNITY_MBER A
+        WHERE UNITY_ID = #{userId}
+        AND SECSN_AT = 'N'
+        AND REG_AT = 'Y'
+	</select>
+
+	<select id="getUserLmsInfo"  resultType="emap" parameterType="dmap">
+		SELECT
+            T1.UNITY_MBERNO AS USERNO
+            , T1.UNITY_ID AS USERID
+            , T1.MBERNM AS USERNAME 
+            , T1.EMAIL
+            , T1.MOBLPHON AS MOBILE  
+            , T1.MT_GRADE_CODE  
+            , T1.BRTHDY
+            , T1.SESSION_ID
+            <if test="noMtSubCode == null">
+	            , T2.NUM_CD AS MT_GRADE_NUM
+    	    </if>
+            , (SELECT MT_SUB_NAME FROM LMS_CD_MT_SUB T3 WHERE T3.MT_SUB_CODE = T1.MT_GRADE_CODE) MT_GRADE_NAME
+        FROM
+            LMS_CT_UNITY_MBER T1
+            <if test="noMtSubCode == null">
+            , LMS_CD_MT_SUB T2
+            </if>
+        WHERE 1=1
+	        <if test="noMtSubCode == null">
+		        AND T1.MT_GRADE_CODE = T2.MT_SUB_CODE
+    	    </if>
+            AND T1.UNITY_MBERNO = #{userNo}
+	</select>
+
+	<update id="updateJsessionId" parameterType="dmap">
+		UPDATE LMS_CT_UNITY_MBER SET
+			 SESSION_ID = #{jessionId}
+		WHERE UNITY_ID = #{userId}
+	</update>
+	
+	<update id="deleteJsessionId" parameterType="dmap">
+		UPDATE LMS_CT_UNITY_MBER SET
+			 SESSION_ID = NULL
+		WHERE UNITY_ID = #{SES_USERID}
+	</update>
+
+	<update id="updateLoginSuccessInfo" parameterType="dmap">
+		UPDATE LMS_CT_UNITY_MBER SET 
+			LOGIN_FAIL_CNT = 0
+			, LOGIN_DATE = SYSDATE
+		WHERE UNITY_ID = #{userId}
+	</update>
+
+	<update id="updateMemberInfo" parameterType="dmap">
+		UPDATE LMS_CT_UNITY_MBER SET         
+	        <if test="pwd != null">
+             UNITY_PASSWORD = #{pwd}
+            </if>                 
+             , LOGIN_FAIL_CNT = 0                         
+             , MOBLPHON = #{moblphon}             
+	        <if test="telno != null">
+             , TELNO = #{telno}
+            </if>    
+	        <if test="lnmZip != null">      
+             , LNM_ZIP = #{lnmZip} 
+            </if>     
+	        <if test="lnmAdres1 != null">                       
+             , LNM_ADRES1 = #{lnmAdres1}
+            </if>     
+	        <if test="lnmAdres2 != null">
+             , LNM_ADRES2 = #{lnmAdres2}
+            </if>     
+	        <if test="job != null">
+             , JOB = #{job}
+            </if>     
+	        <if test="userPath != null">
+             , USER_PATH = #{userPath}
+            </if>     
+	        <if test="emailRecptnAt != null">
+             , EMAIL_RECPTN_AT = #{emailRecptnAt}
+            </if>     
+	        <if test="smsRecptnAt != null">
+             , SMS_RECPTN_AT = #{smsRecptnAt}
+            </if>     
+            <if test="userEtc != null and userEtc != '' ">
+            , USER_ETC = #{userEtc}
+            </if>
+            <if test="userName != null and userName != '' ">
+            , MBERNM = #{userName}
+            </if>
+            <if test="sex != null and sex != '' ">
+            , SEX = #{sex}
+            </if>
+            <if test="brthdy != null and brthdy != '' ">
+            , BRTHDY = #{brthdy}
+            </if>            
+        WHERE UNITY_ID = #{userId}
+	</update>
+	
+	<update id="updateMemberSecsn" parameterType="dmap">
+		UPDATE 
+			LMS_CT_UNITY_MBER
+		SET
+			SECSN_DATE = SYSDATE 
+			, MT_SECSN_CODE = #{secsnCd}
+			, SECSN_AT = 'Y'     
+			, UNITY_ID = #{secsnID}
+		WHERE 
+			UNITY_ID = #{userId}
+	</update>
+
+	<insert id="insertMbrLoginLog" parameterType="dmap">
+		INSERT INTO LMS_SY_LOGIN_LOG (
+	          LOGIN_SEQ
+			, SYS_GB
+			, TRANS_USERNO
+			, TRANS_USERID
+			, TRANS_USERNAME
+			, TRANS_IP
+			, TRANS_GB
+			, TRANS_DT
+			, SUMMARY
+    	) VALUES (
+          	  (SELECT NVL(MAX(LOGIN_SEQ),0) + 1 FROM LMS_SY_LOGIN_LOG)
+	        , #{sysGb}
+	        , #{transUserNo}
+	        , #{transUserId}
+	        , #{transUserName}
+	        , #{transIp}
+	        , #{transGb}
+	        , SYSDATE
+	        , #{summary}
+    	)
+	</insert>
+	
+	<select id="getUserInfoDuplByEmail"  resultType="emap" parameterType="dmap">
+		SELECT
+			UNITY_MBERNO
+        FROM
+        	LMS_CT_UNITY_MBER 
+        WHERE
+        	EMAIL = #{email}
+        	AND SECSN_AT = 'N'
+	</select> 
+    
+    <select id="check" parameterType="dmap" resultType="emap">
+		SELECT 
+			UNITY_ID,SNS_LOGIN_TYPE 
+		FROM 
+			LMS_CT_UNITY_MBER 
+		WHERE 
+			MBERNM = #{rmNm} AND BRTHDY = #{ruBrthdy} AND EMAIL = #{email}
+    </select>
+    
+    <update id="changePw" parameterType="dmap">
+    	UPDATE 
+    		LMS_CT_UNITY_MBER 
+    	SET 
+    		UNITY_PASSWORD = #{pass} 
+    	WHERE 
+    		MBERNM = #{rmNm} AND BRTHDY = #{ruBrthdy} AND EMAIL = #{email} AND UNITY_ID = #{ruId}
+    </update> 
+</mapper>

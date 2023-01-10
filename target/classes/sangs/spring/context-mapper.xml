@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+	<bean id="sqlSession" class="com.sangs.util.RefreshableSqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:/sangs/sqlmap/config/sql-mapper-config.xml" />
+        <property name="mapperLocations">
+            <array>
+                <value>classpath:/sangs/sqlmap/mappers/${Globals.DbType}/academy/*.xml</value>
+                <value>classpath:/sangs/sqlmap/mappers/${Globals.DbType}/common/*.xml</value>
+                <value>classpath:/sangs/sqlmap/mappers/${Globals.DbType}/classdesk/*.xml</value>
+                <value>classpath:/sangs/sqlmap/mappers/${Globals.DbType}/ccedu/*.xml</value>
+            </array>
+        </property>
+	</bean>
+
+ 	<bean class="egovframework.rte.psl.dataaccess.mapper.MapperConfigurer">
+        <property name="basePackage" value="com.webapp.**.mapper" />
+	</bean>
+    
+</beans>
