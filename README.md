@@ -16,37 +16,61 @@
 |최진우|신윤성|
 |백엔드 개발 및 서버 환경 구축 |프론트엔드 개발|
 
-### ERD
+</br>
+
+## 기술 스택
+### Environment
+![Eclipse](https://img.shields.io/badge/eclipseide-2C2255?style=for-the-badge&logo=eclipseide&logoColor=white)
+![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=Git&logoColor=white)
+![Github](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=GitHub&logoColor=white)
+
+### Framework
+![Spring](https://img.shields.io/badge/spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
+
+### WAS
+![ApacheTomcat](https://img.shields.io/badge/apachetomcat-F8DC75?style=for-the-badge&logo=apachetomcat&logoColor=white)
+
+### Development
+![HTML](https://img.shields.io/badge/html5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/css3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=white)
+![Oracle](https://img.shields.io/badge/oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white)
+
+</br>
+
+## ERD
 ![erd](./img/erd.png)
 
-### Functionality
+</br>
 
-#### 비밀번호 암호화
+## Functionality
+
+### 비밀번호 암호화
 
 ![aes](./img/aes.png)
 - 개인정보보호를 위해 비밀번호에 AES256 암호화를 적용했습니다.
 
 </br>
 
-#### 비밀번호 분실 코드 전송 
+### 비밀번호 분실 코드 전송 
 
 ![auth](./img/auth.png)
 - 비밀번호 분실 시 회원가입 때 입력한 이메일로 임의로 생성된 코드를 전송합니다.
 - 위 코드를 통해 신규 비밀번호를 설정할 수 있습니다.
 
-#### 반응형 웹
+### 반응형 웹
 
 ![responsive](./img/responsive.png)
 - 보다 편한 사용을 위해 반응형 웹을 지원합니다.
 
-#### DAUM 주소 찾기
+### DAUM 주소 찾기
 
 ![daumpost](./img/daumpost.png)
 - DAUM 지도 API와 연동하여 주소 찾기가 가능합니다.
 
 </br>
 
-## Page
+## 페이지 설명
 ### 메인 페이지
 ![main](./img/main.png)
 - 메인 배너를 통해 현재 서비스되고 있는 전공 강의를 확인할 수 있습니다.
@@ -82,22 +106,4 @@
 - 사용자는 문의 사항을 게시판에 올릴 수 있습니다.
 - 위와 같이 관리자 계정으로 로그인하면 답변을 남길 권한이 생깁니다.
 
-</br>
 
-## 기술 스택
-### Environment
-![Eclipse](https://img.shields.io/badge/eclipseide-2C2255?style=for-the-badge&logo=eclipseide&logoColor=white)
-![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=Git&logoColor=white)
-![Github](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=GitHub&logoColor=white)
-
-### Framework
-![Spring](https://img.shields.io/badge/spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
-
-### WAS
-![ApacheTomcat](https://img.shields.io/badge/apachetomcat-F8DC75?style=for-the-badge&logo=apachetomcat&logoColor=white)
-
-### Development
-![HTML](https://img.shields.io/badge/html5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS](https://img.shields.io/badge/css3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=white)
-![Oracle](https://img.shields.io/badge/oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white)
